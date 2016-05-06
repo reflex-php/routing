@@ -1,11 +1,18 @@
 {
   "name": "reflex-routing",
   "version": "1.0.0",
-  "description": "",
-  "main": "Router.js",
+  "description": "Routing library for JavaScript",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mike Shellard <contact@mikeshellard.me>",
-  "license": "ISC"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reflex-php/routing"
+  },
+  "bugs": {
+    "url": "https://github.com/reflex-php/routing/issues"
+  }
 }
