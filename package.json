@@ -1,6 +1,6 @@
 {
   "name": "reflex-routing",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Routing library for JavaScript",
   "main": "index.js",
   "scripts": {
