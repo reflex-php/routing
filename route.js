@@ -3,7 +3,7 @@ var extend = _.extend;
 var is_type = _.is_type;
 
 /**
- * Route finaltwat
+ * Route
  *
  * @param {string} uri Uri to route
  * @param {object} callbacks Callbacks to call when requested
