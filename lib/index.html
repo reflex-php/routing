@@ -5,7 +5,7 @@
     <title>Testing</title>
 </head>
 <body>
-    <script src="./lib/main.js"></script>
+    <script src="main.js"></script>
     <script>
         var router = new Router;
         
@@ -28,10 +28,6 @@
                 }
             },
 
-            'john/:user_id': function(user_id) {
-                return 'hi'+user_id;
-            },
-
             /**
              * /
              */
@@ -45,6 +41,8 @@
         });
 
         router.where('user_id', '[0-9a-z]+');
+
+        router.route('user/1/edit');
     </script>
 </body>
 </html>
