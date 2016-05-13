@@ -4,7 +4,8 @@
   "description": "Routing library for JavaScript",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c"
   },
   "author": "Mike Shellard <contact@mikeshellard.me>",
   "license": "MIT",
@@ -14,5 +15,13 @@
   },
   "bugs": {
     "url": "https://github.com/reflex-php/routing/issues"
+  },
+  "devDependencies": {
+    "babel-preset-es2015-rollup": "^1.1.1",
+    "rollup-plugin-babel": "^2.4.0",
+    "rollup-plugin-includepaths": "^0.1.5"
+  },
+  "dependencies": {
+    "rollup": "^0.26.3"
   }
 }
