@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing</title>
+</head>
+<body>
+    <script src="./lib/main.js"></script>
+    <script>
+        var router = new Router;
+        
+        router.map({
+            /**
+             * /home
+             */
+            home: function () {
+                console.log('home');
+            },
+
+            // /user
+            'user/:user_id': {
+                edit: function (user_id) {
+                    return 'editiing ' + user_id;
+                },
+
+                delete: function (user_id) {
+                    return 'deleting ' + user_id;
+                }
+            },
+
+            'john/:user_id': function(user_id) {
+                return 'hi'+user_id;
+            },
+
+            /**
+             * /
+             */
+            '': function () {
+                console.log('home');
+            },
+
+            about: function () {
+                console.log('about');
+            }
+        });
+
+        router.where('user_id', '[0-9a-z]+');
+    </script>
+</body>
+</html>
