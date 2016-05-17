@@ -41,11 +41,27 @@ export default class Route {
         return responses;
     }
 
+    findPattern (functionString) {
+        let matches = null;
+        let patterns = {
+            patternPreES2015: /^function\s*[^\(]*\(\s*([^\)]*)\)/m, 
+            patternPostES2015: /^(?:\()?([\d\w\s,]+)(?:\))?/m
+        };
+
+        for (let pattern in patterns) {
+            if (matches = functionString.match(patterns[pattern])) {
+                return matches;
+            }
+        }
+
+        return null;
+    }
+
     resolve (callback, parameters) {
-        let FN_ARGS_REGEX = '^function *[^(]*( *([^)]*))';
         let FN_ARG_SPLIT = /,/;
         let reflection = callback.toString();
-        let matches = reflection.match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m);
+        // let matches = reflection.match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m);
+        let matches = this.findPattern(reflection);
         let dependencies = matches[1].split(FN_ARG_SPLIT);
         let resolved = new Array();
 
@@ -53,7 +69,7 @@ export default class Route {
             dependencies[i] = dependencies[i].replace(/(?:_)([a-z_]+)/im, '$1');
         }
 
-        return function () {
+        return () => {
             for (let dependency of dependencies) {
                 if (dependency in parameters) {
                     resolved.push(parameters[dependency]);

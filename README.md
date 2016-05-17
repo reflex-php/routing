@@ -16,7 +16,7 @@ var router = new Router({
      */
     fallout: function(code) {
         if (404 == code) {
-            return router.route('home');
+            return router.route('default');
         }
 
         throw new Error('[Router] Fallout code: ' + code);
@@ -25,11 +25,7 @@ var router = new Router({
 
 // Map your routes
 router.map({
-    home: function() {
-        console.log('home');
-    },
-
-    '': function() {
+    default: function() {
         console.log('home');
     },
 

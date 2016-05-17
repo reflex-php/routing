@@ -1,5 +1,5 @@
 export const defaultConfig = {
-    fallout: function (code) {
-        console.log(code);
-    }
+    fallout: code => console.log(code),
+
+    defaultRouteKey: 'default'
 };

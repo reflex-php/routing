@@ -8,8 +8,8 @@ const includePathOptions = {
 export default {
     entry: 'src/index.js',
     dest: 'lib/main.js',
-    format: 'cjs',
-    // moduleName: 'Router',
+    format: 'iife',
+    moduleName: 'Router',
     plugins: [
         babel({
             exclude: 'node_modules/**'

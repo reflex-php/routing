@@ -10,39 +10,21 @@
         var router = new Router;
         
         router.map({
-            /**
-             * /home
-             */
-            home: function () {
-                console.log('home');
-            },
+            default: () => console.log('home'),
 
             // /user
             'user/:user_id': {
-                edit: function (user_id) {
-                    return 'editiing ' + user_id;
-                },
+                edit: user_id => `editing user ${user_id}`,
 
-                delete: function (user_id) {
-                    return 'deleting ' + user_id;
-                }
+                delete: (user_id) => `deleting user ${user_id}`
             },
 
-            /**
-             * /
-             */
-            '': function () {
-                console.log('home');
-            },
-
-            about: function () {
-                console.log('about');
-            }
+            about: () => console.log('about')
         });
 
         router.where('user_id', '[0-9a-z]+');
 
-        router.route('user/1/edit');
+        console.log(router.route('user/1/edit'));
     </script>
 </body>
 </html>
