@@ -5,7 +5,7 @@
   "main": "lib/main.module.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c"
+    "build": "rollup -c; rollup -c -f cjs -o ./lib/main.module.js"
   },
   "author": "Mike Shellard <contact@mikeshellard.me>",
   "license": "MIT",
