@@ -14,37 +14,28 @@ var router = new Router({
     /**
      * Fallout function, handles errors
      */
-    fallout: function(code) {
+    fallout: (code) => {
         if (404 == code) {
             return router.route('default');
         }
 
-        throw new Error('[Router] Fallout code: ' + code);
+        throw new Error(`[Router] Fallout code: ${code}`);
     }
 });
 
 // Map your routes
 router.map({
-    default: function() {
-        console.log('home');
-    },
+    default: () => console.log('default'),
 
-    about: function() {
-        console.log('about');
-    },
+    about: () => console.log('about'),
 
     'user/:user_id': {
-        edit: function(user_id) {
-            console.log('editing user ' + user_id);
-        },
+        edit: user_id => console.log(`editing user ${user_id}`),
 
-        delete: function(user_id) {
-            console.log('deleting user ' + user_id);
-        }
+        delete: user_id => console.log(`deleting user ${user_id}`)
     }
 });
 
 // Launch a route
-router.route('home');
-router.route('about');
+router.route('user/1/edit');
 ```

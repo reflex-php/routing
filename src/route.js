@@ -60,7 +60,6 @@ export default class Route {
     resolve (callback, parameters) {
         let FN_ARG_SPLIT = /,/;
         let reflection = callback.toString();
-        // let matches = reflection.match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m);
         let matches = this.findPattern(reflection);
         let dependencies = matches[1].split(FN_ARG_SPLIT);
         let resolved = new Array();
