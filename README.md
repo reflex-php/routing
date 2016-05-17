@@ -14,7 +14,7 @@ var router = new Router({
     /**
      * Fallout function, handles errors
      */
-    fallout: function fallout(code) {
+    fallout: function(code) {
         if (404 == code) {
             return router.route('home');
         }
@@ -25,24 +25,24 @@ var router = new Router({
 
 // Map your routes
 router.map({
-    'home': function home() {
+    home: function() {
         console.log('home');
     },
 
-    '': function _() {
+    '': function() {
         console.log('home');
     },
 
-    'about': function about() {
+    about: function() {
         console.log('about');
     },
 
     'user/:user_id': {
-        'edit': function (user_id) {
+        edit: function(user_id) {
             console.log('editing user ' + user_id);
         },
 
-        'delete': function (user_id) {
+        delete: function(user_id) {
             console.log('deleting user ' + user_id);
         }
     }
