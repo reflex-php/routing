@@ -6,7 +6,7 @@ Javascript routing library
 To install the latest release version:
 
 ```bash
-npm install --save npm install reflex-routing
+npm install --save reflex-routing
 ```
 
 ```javascript
@@ -23,6 +23,7 @@ var router = new Router({
     }
 });
 
+// Map your routes
 router.map({
     'home': function home() {
         console.log('home');
@@ -34,9 +35,18 @@ router.map({
 
     'about': function about() {
         console.log('about');
+    },
+
+    'user/:user_id': {
+        'edit': function (user_id) {
+            console.log('editing user ' + user_id);
+        },
+
+        'delete': function (user_id) {
+            console.log('deleting user ' + user_id);
+        }
     }
 });
-
 
 // Launch a route
 router.route('home');
