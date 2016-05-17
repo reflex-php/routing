@@ -94,7 +94,7 @@ export default class Router {
         let compiled = this.compiled;
         let route = null;
 
-        if ('' == uri) {
+        if ('' == uri || null == uri || undefined == uri) {
             uri = this.config.defaultRouteKey;
         }
 
@@ -176,11 +176,11 @@ export default class Router {
         let route = this.find(uri ? uri.trimmer('/') : '');
 
         if (! route) {
-            throw new Error('[Router] No route was found while creating url [' + uri + ']');
+            throw new Error(`[Router] No route was found while creating url [${uri}]`);
         }
 
         for (let key in parameters) {
-            uri = uri.replace(':' + key, parameters[key]);
+            uri = uri.replace(`:${key}`, parameters[key]);
         }
 
         let matcher = new Matcher(route.route);

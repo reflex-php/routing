@@ -28,8 +28,8 @@ export default class Route {
             callableArguments.push(parameters[parameter]);
         }
 
-        let responses = [],
-            callbacks = this.callbacks || [];
+        let responses = [];
+        let callbacks = this.callbacks || [];
 
         for (let callback of callbacks) {
             if (is_type(callback, 'function')) {
@@ -45,7 +45,7 @@ export default class Route {
         let matches = null;
         let patterns = {
             patternPreES2015: /^function\s*[^\(]*\(\s*([^\)]*)\)/m, 
-            patternPostES2015: /^(?:\()?([\d\w\s,]+)(?:\))?/m
+            patternPostES2015: /^(?:\()?([\d\w\s,]*)(?:\))?/m
         };
 
         for (let pattern in patterns) {
