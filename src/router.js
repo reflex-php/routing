@@ -1,10 +1,10 @@
-import { extend, exists, is_type, array_combine } from './util.js';
+import { extend, exists, is_type, array_combine, ltrim, rtrim, trimmer } from './util.js';
 import { defaultConfig } from './config.js';
 import Matcher from './matcher.js';
 import Route from './route.js';
 
 export default class Router {
-    constructor (config, map) {
+    constructor (mappables = {}, config = {}) {
         this.routes = {};
         this.config = extend(defaultConfig, config);
         this.wheres = {
@@ -14,10 +14,8 @@ export default class Router {
         this.compiled = {};
         this.previousUri;
 
-        if (is_type(map, 'object')) {
-            for (let subMap in map) {
-                this.map(map[subMap]);
-            }
+        if (is_type(mappables, 'object')) {
+            this.map(mappables);
         }
     }
 
@@ -30,7 +28,7 @@ export default class Router {
 
     with (where, routeWheres) {
         let wheres = extend(this.wheres, routeWheres);
-        let whereKey = where.ltrim(':').rtrim('?');
+        let whereKey = ltrim(rtrim(where, '?'), ':');
         let regex = exists(whereKey, wheres) ? wheres[whereKey] : '.*';
 
         if (this.lastCharacterIs(where, '?')) {
@@ -72,7 +70,8 @@ export default class Router {
             let i = 0;
 
             for (let parameter of routeParameters) {
-                wheres[i++] = parameter.ltrim(':').rtrim('?');
+                // wheres[i++] = parameter.ltrim(':').rtrim('?');
+                wheres[i++] = ltrim(rtrim(parameter, '?'), ':');
                 let lookFor = parameter;
                 if (this.lastCharacterIs(parameter, '?')) {
                     lookFor = '/' + lookFor;
@@ -173,7 +172,7 @@ export default class Router {
 
     url (uri, parameters) {
         uri = this.normalize(uri);
-        let route = this.find(uri ? uri.trimmer('/') : '');
+        let route = this.find(uri ? trimmer(uri, '/') : '');
 
         if (! route) {
             throw new Error(`[Router] No route was found while creating url [${uri}]`);
@@ -196,7 +195,7 @@ export default class Router {
         this.routesToRegex();
         uri = this.normalize(uri);
         
-        let route = this.find(uri ? uri.trimmer('/') : '');
+        let route = this.find(uri ? trimmer(uri, '/') : '');
         if (! route) {
             let fallout = this.getFalloutHandler();
 

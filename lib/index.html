@@ -7,9 +7,7 @@
 <body>
     <script src="main.js"></script>
     <script>
-        var router = new Router;
-        
-        router.map({
+        var router = new Router({
             default: () => console.log('home'),
 
             // /user
@@ -22,7 +20,7 @@
             about: () => console.log('about')
         });
 
-        router.where('user_id', '[0-9a-z]+');
+        router.where('user_id', '[0-9]+');
 
         console.log(router.route('user/1/edit'));
     </script>

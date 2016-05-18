@@ -38,3 +38,18 @@ export function array_combine (keys, values) {
 
     return new_array;
 }
+
+export function trimmer (string, charlist) {
+    charlist = charlist || 's';
+    return string.replace(new RegExp('^[' + charlist + ']+$'), '');
+};
+
+export function ltrim (string, charlist) {
+    charlist = charlist || 's';
+    return string.replace(new RegExp('^[' + charlist + ']+'), '');
+};
+
+export function rtrim (string, charlist) {
+    charlist = charlist || 's';
+    return string.replace(new RegExp('[' + charlist + ']+$'), '');
+};
