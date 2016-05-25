@@ -8,7 +8,9 @@
     <script src="main.js"></script>
     <script>
         var router = new Router({
-            default: () => console.log('home'),
+            default: () => {
+                console.log(this.router.url('user/:user_id/edit', {user_id: 1}));
+            },
 
             // /user
             'user/:user_id': {

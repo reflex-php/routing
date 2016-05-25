@@ -170,7 +170,7 @@ export default class Router {
         return this;
     }
 
-    url (uri, parameters) {
+    url (uri, parameters = {}) {
         uri = this.normalize(uri);
         let route = this.find(uri ? trimmer(uri, '/') : '');
 
@@ -180,6 +180,10 @@ export default class Router {
 
         for (let key in parameters) {
             uri = uri.replace(`:${key}`, parameters[key]);
+        }
+
+        if ('default' == route.route) {
+            return '/';
         }
 
         let matcher = new Matcher(route.route);
@@ -196,14 +200,16 @@ export default class Router {
         uri = this.normalize(uri);
         
         let route = this.find(uri ? trimmer(uri, '/') : '');
+
+
         if (! route) {
             let fallout = this.getFalloutHandler();
 
-            if (! fallout || ! is_type(fallout, 'function')) {
+            if (! is_type(fallout, 'function')) {
                 throw new Error('[Router] No route was found, nor any fallout function.');
             }
 
-            return fallout(404, this);
+            return fallout.apply(this, [404, this]);
         }
 
         return route.instance.launch(route.parameters);
