@@ -1,5 +1,8 @@
 export const defaultConfig = {
-    fallout: code => console.log(code),
+    /**
+     * Fallout function, handles errors
+     */
+    fallout: code => throw new Error(`[Router] Fallout code: ${code}`),
 
     defaultRouteKey: 'default'
 };
