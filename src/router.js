@@ -183,7 +183,7 @@ export default class Router {
         }
 
         if ('default' == route.route) {
-            return '/';
+            return '';
         }
 
         let matcher = new Matcher(route.route);
@@ -200,7 +200,6 @@ export default class Router {
         uri = this.normalize(uri);
         
         let route = this.find(uri ? trimmer(uri, '/') : '');
-
 
         if (! route) {
             let fallout = this.getFalloutHandler();
