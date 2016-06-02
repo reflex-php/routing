@@ -4,6 +4,12 @@ import Matcher from './matcher.js';
 import Route from './route.js';
 
 export default class Router {
+    /**
+     * Constructor
+     * @param  {Object} mappables Routes to map
+     * @param  {Object} config    Configuration
+     * @return {Router}           
+     */
     constructor (mappables = {}, config = {}) {
         this.routes = {};
         this.config = extend(defaultConfig, config);
@@ -19,6 +25,11 @@ export default class Router {
         }
     }
 
+    /**
+     * Get parameters for a route
+     * @param  {string} route Route to split in to params
+     * @return {array}       
+     */
     getRouteParameters (route) {
         let matcher = new Matcher('(?::)((?:[a-z]{1})(?:[0-9a-z_]*))', 'i');
         let routeParts = route.split('/');
@@ -26,6 +37,12 @@ export default class Router {
         return matcher.match(routeParts);
     }
 
+    /**
+     * Generate with regex
+     * @param  {string} where       where to lookup
+     * @param  {string} routeWheres 
+     * @return {string}             
+     */
     with (where, routeWheres) {
         let wheres = extend(this.wheres, routeWheres);
         let whereKey = ltrim(rtrim(where, '?'), ':');
@@ -38,22 +55,48 @@ export default class Router {
         return '(' + regex + ')';
     }
 
+    /**
+     * Get last character
+     * @param  {string} string String to get last character
+     * @return {string}        
+     */
     getLastCharacter (string) {
         return string ? string[string.length - 1] : '';
     }
 
+    /**
+     * Is last character something
+     * @param  {string} string String to search in
+     * @param  {string} is     String to look for
+     * @return {boolean}        [description]
+     */
     lastCharacterIs (string, is) {
         return this.getLastCharacter(string) == is;
     }
 
+    /**
+     * Get first character
+     * @param  {string} string String to get first character
+     * @return {string}        
+     */
     getFirstCharacter (string) {
         return string ? string[0] : '';
     }
 
+    /**
+     * Is the first character something
+     * @param  {string} string String to search in
+     * @param  {string} is     String to look for
+     * @return {boolean}        
+     */
     firstCharacterIs (string, is) {
         return this.getFirstCharacter(string) == is;
     }
 
+    /**
+     * Generate routes regex
+     * @return {null} 
+     */
     routesToRegex () {
         let compiled = this.compiled;
 
@@ -89,6 +132,11 @@ export default class Router {
         this.compiled = compiled;
     }
 
+    /**
+     * Find a URI, compiled or otherwise
+     * @param  {string} uri URI to hunt
+     * @return {object}     
+     */
     find (uri) {
         let compiled = this.compiled;
         let route = null;
@@ -121,12 +169,21 @@ export default class Router {
         return route;
     }
 
+    /**
+     * Handle unresolved routes
+     * @return {mixed} 
+     */
     getFalloutHandler () {
-        if (exists('fallout', this.config)) {
-            return is_type(this.config['fallout'], 'function') ? this.config['fallout'] : null;
+        if (exists('fallout', this.config) && is_type(this.config['fallout'], 'function')) {
+            return this.config['fallout'];
         }
     }
 
+    /**
+     * Normalize the value to a string
+     * @param  {mixed} value Value to normalize
+     * @return {string}       
+     */
     normalize (value) {
         if (typeof value === 'string') {
             return value;
@@ -139,6 +196,11 @@ export default class Router {
         return value;
     }
 
+    /**
+     * Map routes
+     * @param  {object} routes Routes to map
+     * @return {Router}        
+     */
     map (routes) {
         for (let route in routes) {
             let thisUri = this.previousUri;
@@ -160,16 +222,36 @@ export default class Router {
         return this;
     }
 
+    /**
+     * Add a route
+     * @param {string} uri      URI to map to
+     * @param {callable} callable Callable
+     * @return {Router}
+     */
     add (uri, callable) {
-        return this.routes[uri] = new Route(uri, callable, this);
+        this.routes[uri] = new Route(uri, callable, this);
+
+        return this;
     }
 
+    /**
+     * Map a parameter
+     * @param  {string} key   Key parameter to map
+     * @param  {string} regex Regex to map to key
+     * @return {Router}       [description]
+     */
     where (key, regex) {
         this.wheres[key] = regex;
 
         return this;
     }
 
+    /**
+     * Generate a URL
+     * @param  {string} uri        URI String
+     * @param  {Object} parameters Parameters
+     * @return {string|boolean}            
+     */
     url (uri, parameters = {}) {
         uri = this.normalize(uri);
         let route = this.find(uri ? trimmer(uri, '/') : '');
@@ -195,6 +277,11 @@ export default class Router {
         return false;
     }
 
+    /**
+     * Launch a route
+     * @param  {string} uri URI to search and route
+     * @return {mixed}
+     */
     route (uri) {
         this.routesToRegex();
         uri = this.normalize(uri);
