@@ -2,6 +2,7 @@ import { extend, exists, is_type, array_combine, ltrim, rtrim, trimmer } from '.
 import { defaultConfig } from './config.js';
 import Matcher from './matcher.js';
 import Route from './route.js';
+import CompiledRoute from './compiled-route.js';
 
 export default class Router {
     /**
@@ -15,7 +16,7 @@ export default class Router {
         this.config = extend(defaultConfig, config);
         this.wheres = {
             'id': '[0-9]+',
-            '*': '.*'
+            '*': '[\w\-]+'
         };
         this.compiled = {};
         this.previousUri;
@@ -40,57 +41,18 @@ export default class Router {
     /**
      * Generate with regex
      * @param  {string} where       where to lookup
-     * @param  {string} routeWheres 
      * @return {string}             
      */
-    with (where, routeWheres) {
-        let wheres = extend(this.wheres, routeWheres);
-        let whereKey = ltrim(rtrim(where, '?'), ':');
-        let regex = exists(whereKey, wheres) ? wheres[whereKey] : '.*';
+    with (where) {
+        let wheres = this.wheres;
+        let whereKey = this.normalizeWheres(where);
+        let regex = exists(whereKey, wheres) ? wheres[whereKey] : '[\\w\\-]+';
 
-        if (this.lastCharacterIs(where, '?')) {
-            return '(?:/{1}(' + regex + '|)|)';
+        if (where.endsWith('?')) {
+            return '(?:\/{1}(' + regex + ')|)';
         }
 
         return '(' + regex + ')';
-    }
-
-    /**
-     * Get last character
-     * @param  {string} string String to get last character
-     * @return {string}        
-     */
-    getLastCharacter (string) {
-        return string ? string[string.length - 1] : '';
-    }
-
-    /**
-     * Is last character something
-     * @param  {string} string String to search in
-     * @param  {string} is     String to look for
-     * @return {boolean}        [description]
-     */
-    lastCharacterIs (string, is) {
-        return this.getLastCharacter(string) == is;
-    }
-
-    /**
-     * Get first character
-     * @param  {string} string String to get first character
-     * @return {string}        
-     */
-    getFirstCharacter (string) {
-        return string ? string[0] : '';
-    }
-
-    /**
-     * Is the first character something
-     * @param  {string} string String to search in
-     * @param  {string} is     String to look for
-     * @return {boolean}        
-     */
-    firstCharacterIs (string, is) {
-        return this.getFirstCharacter(string) == is;
     }
 
     /**
@@ -98,12 +60,11 @@ export default class Router {
      * @return {null} 
      */
     routesToRegex () {
-        let compiled = this.compiled;
-
         for (let route in this.routes) {
             let currentRoute = this.routes[route];
+
             // Already compiled. Don't do all the work again
-            if (exists(route, compiled)) {
+            if (this.isCompiled(route)) {
                 continue;
             }
 
@@ -113,23 +74,33 @@ export default class Router {
             let i = 0;
 
             for (let parameter of routeParameters) {
-                // wheres[i++] = parameter.ltrim(':').rtrim('?');
-                wheres[i++] = ltrim(rtrim(parameter, '?'), ':');
+                wheres.push(this.normalizeWheres(parameter));
                 let lookFor = parameter;
-                if (this.lastCharacterIs(parameter, '?')) {
+
+                if (parameter.endsWith('?')) {
                     lookFor = '/' + lookFor;
                 }
-                regexRoute = regexRoute.replace(lookFor, this.with(parameter, currentRoute.getWheres()));
+                regexRoute = regexRoute.replace(lookFor, this.with(parameter));
             }
 
-            compiled[route] = {
-                route: regexRoute,
-                keys: wheres,
-                instance: currentRoute
-            };
+            this.compiled[route] = new CompiledRoute(regexRoute, wheres, currentRoute);
         }
+    }
 
-        this.compiled = compiled;
+    normalizeWheres (current) {
+        return ltrim(rtrim(current, '?'), ':');
+    }
+
+    isCompiled (uri) {
+        return exists(uri, this.compiled);
+    }
+
+    emptyUriString(uri) {
+        return '' == uri || null == uri || undefined == uri;
+    }
+
+    getDefaultRouteKey() {
+        return this.config.defaultRouteKey;
     }
 
     /**
@@ -138,35 +109,31 @@ export default class Router {
      * @return {object}     
      */
     find (uri) {
-        let compiled = this.compiled;
+        this.routesToRegex();
+
         let route = null;
 
-        if ('' == uri || null == uri || undefined == uri) {
-            uri = this.config.defaultRouteKey;
+        if (this.emptyUriString(uri)) {
+            uri = this.getDefaultRouteKey();
         }
 
-        // No matching needed I guess :D
-        if (exists(uri, compiled)) {
-            return compiled[uri];
-        }
+        for (let currentCompiled in this.compiled) {
+            let compiledRoute = this.compiled[currentCompiled];
+            var results = null;
 
-        for (let currentCompiled in compiled) {
-            let toMatch = compiled[currentCompiled];
-            let matcher = new Matcher(toMatch.route);
-            let results = null;
-
-            if (results = matcher.match(uri)) {
-                route = {
-                    parameters: array_combine(toMatch.keys, results.slice(1)),
-                    route: toMatch.route,
+            if (results = this.routeMatchesUri(compiledRoute.getRoute(), uri)) {
+                return {
+                    parameters: array_combine(compiledRoute.getKeys(), results.slice(1)),
+                    route: compiledRoute.getRoute(),
                     uri: uri,
-                    instance: toMatch.instance
+                    instance: compiledRoute.getInstance()
                 };
-                break;
             }
         }
+    }
 
-        return route;
+    routeMatchesUri(route, uri) {
+        return new Matcher('^' + route + '$', 'i').match(uri);
     }
 
     /**
@@ -174,7 +141,7 @@ export default class Router {
      * @return {mixed} 
      */
     getFalloutHandler () {
-        if (exists('fallout', this.config) && is_type(this.config['fallout'], 'function')) {
+        if (is_type(this.config['fallout'], 'function')) {
             return this.config['fallout'];
         }
     }
@@ -185,15 +152,19 @@ export default class Router {
      * @return {string}       
      */
     normalize (value) {
-        if (typeof value === 'string') {
+        value = (function (value) {
+            if (typeof value === 'string') {
+                return value;
+            }
+
+            if (typeof value === 'number') {
+                return '' + value;
+            }
+
             return value;
-        }
+        })(value);
 
-        if (typeof value === 'number') {
-            return '' + value;
-        }
-
-        return value;
+        return value ? ltrim(rtrim(value, '/'), '/') : '';
     }
 
     /**
@@ -254,17 +225,18 @@ export default class Router {
      */
     url (uri, parameters = {}) {
         uri = this.normalize(uri);
-        let route = this.find(uri ? trimmer(uri, '/') : '');
-
-        if (! route) {
-            throw new Error(`[Router] No route was found while creating url [${uri}]`);
-        }
 
         for (let key in parameters) {
             uri = uri.replace(`:${key}`, parameters[key]);
         }
+        
+        let route = this.find(uri);
 
-        if ('default' == route.route) {
+        if (! route) {
+            return new Error(`[Router] No route was found while creating url [${uri}]`);
+        }
+
+        if (this.getDefaultRouteKey() == route.route) {
             return '';
         }
 
@@ -283,16 +255,13 @@ export default class Router {
      * @return {mixed}
      */
     route (uri) {
-        this.routesToRegex();
-        uri = this.normalize(uri);
-        
-        let route = this.find(uri ? trimmer(uri, '/') : '');
+        let route = this.find(this.normalize(uri));
 
         if (! route) {
             let fallout = this.getFalloutHandler();
 
             if (! is_type(fallout, 'function')) {
-                throw new Error('[Router] No route was found, nor any fallout function.');
+                return new Error('[Router] No route was found, nor any fallout function.');
             }
 
             return fallout.apply(this, [404, this]);

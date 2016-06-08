@@ -5,18 +5,28 @@
     <title>Testing</title>
 </head>
 <body>
-    <script src="main.js"></script>
+    <script src="router.js"></script>
     <script>
         var router = new Router({
-            default: () => {
-                console.log(this.router.url('user/:user_id/edit', {user_id: 1}));
+            'home': () => {
+                var uri = router.url('user/:user_id/:some/edit', {user_id: 1, some: 'todo'});
+                console.log(uri);
+                router.route(uri);
+
+                return true;
             },
 
             // /user
-            'user/:user_id': {
-                edit: user_id => `editing user ${user_id}`,
+            'user/:user_id/:some?': {
+                edit: [
+                    (user_id, some) => {console.log(`editing user ${user_id} - ${some}`); return true;},
+                    (user_id, some) => {console.log(user_id); return true;},
+                ],
 
-                delete: (user_id) => `deleting user ${user_id}`
+                delete: (user_id) => {
+                    var some = some || 'ooops'; 
+                    console.log(`deleting user ${user_id} ---- ${some}`)
+                }
             },
 
             about: () => console.log('about')
@@ -24,7 +34,7 @@
 
         router.where('user_id', '[0-9]+');
 
-        console.log(router.route('user/1/edit'));
+        // console.log(router.route('user/1/edit/edit'));
     </script>
 </body>
 </html>

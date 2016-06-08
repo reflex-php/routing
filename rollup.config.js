@@ -7,7 +7,7 @@ const includePathOptions = {
 
 export default {
     entry: 'src/index.js',
-    dest: 'lib/main.js',
+    dest: 'lib/router.js',
     format: 'iife',
     moduleName: 'Router',
     plugins: [

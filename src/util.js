@@ -6,7 +6,7 @@ export function extend (to, from) {
 }
 
 export function exists (key, array) {
-    return key in array;
+    return is_type(array, 'object') && key in array;
 }
 
 export function is_type (thing, assertThis) {

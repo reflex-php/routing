@@ -6,5 +6,5 @@ export const defaultConfig = {
         throw new Error(`[Router] Fallout code: ${code}`)
     },
 
-    defaultRouteKey: 'default'
+    defaultRouteKey: 'home'
 };
