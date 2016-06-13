@@ -3,54 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <title>Testing</title>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin-top: 60px;
+        }
+    </style>
 </head>
-<body>
-    <script src="router.js"></script>
-    <a href="#" onclick="router.route();">Home</a>
-    <a href="#" onclick="router.route('user/1/edit');">Edit Profile</a>
-    <a href="#" onclick="router.route('user/1/delete');">Delete Profile</a>
-    <div id="output"></div>
+<body>    
+    
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#" onclick="router.route();">Project name</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="#" onclick="router.route();">Home</a></li>
+                <li><a href="#" onclick="router.route('user/1/edit');">Edit Profile</a></li>
+                <li><a href="#" onclick="router.route('user/1/delete');">Delete Profile</a></li>
+                <li><a href="#" onclick="router.route('file/in/this/dir.txt');">Find File</a></li>
+            </ul>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    
+    <div class="jumbotron">
+        <div class="container">
+            <h1>Responses</h1>
+        </div>
+    </div>
 
+    <div class="container">
+        <ul id="output"></ul>
+    </div>
+    
+    <script src="router.js"></script>
     <script>
         var router = new Router({
-            'home': () => {
-                var uri = router.url('user/:user_id/:some/edit', {user_id: 1, some: 'todo'});
-                addBody(uri);
-                router.route(uri);
-
-                return true;
-            },
+            'home': () => addBody('Hello, World'),
 
             // /user
-            'user/:user_id/:some?': {
+            'user(/:some)/:user_id': {
                 edit: [
-                    (user_id, some) => {
-                        addBody(`editing user ${user_id} - ${some}`);
-                        return true;
-                    },
-                    (user_id, some) => {
-                        addBody(user_id);
-                        return true;
-                    },
+                    (some, user_id) => addBody(`editing user ${user_id}`),
+                    (some, user_id) => addBody(some || 'todo')
                 ],
 
-                delete: (user_id, some) => {
-                    // var some = some || 'ooops'; 
-                    addBody(`deleting user ${user_id} ---- ${some}`)
-                }
+                delete: [
+                    (some, user_id) => addBody(`deleting user ${user_id}`),
+                    (some, user_id) => addBody(some || 'todo')
+                ]
             },
 
             about: () => addBody('about'),
 
-            'smoosh/*': i => addBody(i)
+            'file/*file': file => addBody(file)
         });
-
-        router.where('user_id', '[0-9]+');
 
         const el = document.getElementById('output');
 
         function addBody(output) {
-            el.innerText = `${el.innerText}\n${output}`;
+            el.innerHTML = `${el.innerHTML}<li>${output}</li>`;
+            return output;
         } 
     </script>
 </body>

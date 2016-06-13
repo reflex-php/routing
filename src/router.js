@@ -1,6 +1,5 @@
 import { extend, exists, is_type, array_combine, ltrim, rtrim, trimmer } from './util.js';
 import { defaultConfig } from './config.js';
-import Matcher from './matcher.js';
 import Route from './route.js';
 import CompiledRoute from './compiled-route.js';
 
@@ -14,12 +13,16 @@ export default class Router {
     constructor (mappables = {}, config = {}) {
         this.routes = {};
         this.config = extend(defaultConfig, config);
-        this.wheres = {
-            'id': '[0-9]+',
-            '\*': '[.*]'
+        this.patterns = {
+            'escape': [/[\-{}\[\]+?.,\\\^$|#\s]/g, '\\$&'],
+            'optional': [/\((.*?)\)/g, '(?:$1)?'],
+            'named': [/(\(\?)?:\w+/g, (match, optional) => optional ? match : '([^/?]+)'],
+            'greedy': [/\*\w+/g, '([^?]*?)'],
         };
         this.compiled = {};
         this.previousUri;
+        this.beforeQueue = new Array();
+        this.afterQueue = new Array();
 
         if (is_type(mappables, 'object')) {
             this.map(mappables);
@@ -32,69 +35,25 @@ export default class Router {
      * @return {array}       
      */
     getRouteParameters (route) {
-        let matcher = new Matcher('(?::)((?:[a-z]{1})(?:[0-9a-z_]*))', 'i');
-        let routeParts = route.split('/');
+        for (let pattern in this.patterns) {
+            let replacement = this.patterns[pattern];
 
-        return matcher.match(routeParts);
-    }
-
-    /**
-     * Generate with regex
-     * @param  {string} where       where to lookup
-     * @return {string}             
-     */
-    with (where) {
-        let wheres = this.wheres;
-        let whereKey = this.normalizeWheres(where);
-        let regex = exists(whereKey, wheres) ? wheres[whereKey] : '[\\w\\-]+';
-
-        if (where.endsWith('?')) {
-            return '(?:\/{1}(' + regex + ')|)';
+            route = route.replace(replacement[0], replacement[1]);
         }
 
-        return '(' + regex + ')';
+        return new RegExp('^' + route + '(?:\\?([\\s\\S]*))?$');
     }
 
     /**
      * Generate routes regex
      * @return {null} 
      */
-    routesToRegex () {
-        for (let route in this.routes) {
-            let currentRoute = this.routes[route];
-
-            // Already compiled. Don't do all the work again
-            if (this.isCompiled(route)) {
-                continue;
-            }
-
-            let routeParameters = this.getRouteParameters(route);
-            let regexRoute = route;
-            let wheres = [];
-            let i = 0;
-
-            for (let parameter of routeParameters) {
-                wheres.push(this.normalizeWheres(parameter));
-                let lookFor = parameter;
-
-                if (parameter.endsWith('?')) {
-                    lookFor = '/' + lookFor;
-                }
-
-                regexRoute = regexRoute.replace(lookFor, this.with(parameter));
-            }
-
-
-            this.compiled[route] = new CompiledRoute(regexRoute, wheres, currentRoute);
-        }
+    routeToRegex (route) {
+        this.compiled[route.uri] = new CompiledRoute(this.getRouteParameters(route.uri), route);
     }
 
     normalizeWheres (current) {
         return ltrim(rtrim(current, '?'), ':');
-    }
-
-    isCompiled (uri) {
-        return exists(uri, this.compiled);
     }
 
     emptyUriString(uri) {
@@ -105,29 +64,57 @@ export default class Router {
         return this.config.defaultRouteKey;
     }
 
+    before (callable) {
+        this.beforeQueue.push(callable);
+        return this;
+    }
+
+    after (callable) {
+        this.afterQueue.push(callable);
+
+        return this;
+    }
+
+    /**
+     * Launch a route
+     * @param  {string} uri URI to search and route
+     * @return {mixed}
+     */
+    route (uri) {
+        let route = this.find(this.normalize(uri));
+        const self = this;
+        this.beforeQueue.map(callable => callable(self, route, uri));
+
+        if (! route) {
+            let fallout = this.getFalloutHandler();
+
+            if (! is_type(fallout, 'function')) {
+                throw new Error('[Router] No route was found, nor any fallout function.');
+            }
+
+            return fallout.apply(this, [404, this]);
+        }
+
+        route.launch();
+
+        this.afterQueue.map(callable => callable(self, route, uri));
+    }
+
     /**
      * Find a URI, compiled or otherwise
      * @param  {string} uri URI to hunt
      * @return {object}     
      */
     find (uri) {
-        this.routesToRegex();
-
         if (this.emptyUriString(uri)) {
             uri = this.getDefaultRouteKey();
         }
 
         for (let compiledKey in this.compiled) {
             let compiledRoute = this.compiled[compiledKey];
-            var results = null;
 
-            if (results = compiledRoute.matches(uri)) {
-                return {
-                    parameters: array_combine(compiledRoute.getKeys(), results.slice(1)),
-                    route: compiledRoute.getRoute(),
-                    uri: uri,
-                    instance: compiledRoute.getInstance()
-                };
+            if (compiledRoute.matches(uri)) {
+                return compiledRoute;
             }
         }
     }
@@ -196,73 +183,10 @@ export default class Router {
      * @return {Router}
      */
     add (uri, callable) {
-        this.routes[uri] = new Route(uri, callable, this);
+        var route = new Route(uri, callable, this);
+        this.routeToRegex(route);
+        this.routes[uri] = route;
 
         return this;
-    }
-
-    /**
-     * Map a parameter
-     * @param  {string} key   Key parameter to map
-     * @param  {string} regex Regex to map to key
-     * @return {Router}       [description]
-     */
-    where (key, regex) {
-        this.wheres[key] = regex;
-
-        return this;
-    }
-
-    /**
-     * Generate a URL
-     * @param  {string} uri        URI String
-     * @param  {Object} parameters Parameters
-     * @return {string|boolean}            
-     */
-    url (uri, parameters = {}) {
-        uri = this.normalize(uri);
-
-        for (let key in parameters) {
-            uri = uri.replace(`:${key}`, parameters[key]);
-        }
-        
-        let route = this.find(uri);
-
-        if (! route) {
-            throw new Error(`[Router] No route was found while creating url [${uri}]`);
-        }
-
-        if (this.getDefaultRouteKey() == route.route) {
-            return '';
-        }
-
-        let matcher = new Matcher(route.route);
-
-        if (matcher.test(uri)) {
-            return uri;
-        }
-
-        return false;
-    }
-
-    /**
-     * Launch a route
-     * @param  {string} uri URI to search and route
-     * @return {mixed}
-     */
-    route (uri) {
-        let route = this.find(this.normalize(uri));
-
-        if (! route) {
-            let fallout = this.getFalloutHandler();
-
-            if (! is_type(fallout, 'function')) {
-                throw new Error('[Router] No route was found, nor any fallout function.');
-            }
-
-            return fallout.apply(this, [404, this]);
-        }
-
-        return route.instance.launch(route.parameters);
     }
 }

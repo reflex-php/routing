@@ -1,8 +1,8 @@
 export default class Queue {  
-    constructor(autorun = true) {
+    constructor(autorun = true, queue) {
         this.running = false;
         this.autorun = autorun;
-        this.queue = [];
+        this.queue = queue || new Array;
         this.previousValue = undefined;
     }
   

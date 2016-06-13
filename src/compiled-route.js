@@ -1,25 +1,39 @@
-import Matcher from './matcher.js';
-
 export default class CompiledRoute {
-    constructor(route, keys, instance) {
+    constructor(regex, route) {
+        this.regex = regex;
         this.route = route;
-        this.keys = keys;
-        this.instance = instance;
+        this.parameters = null;
     }
 
-    getKeys() {
-        return this.keys;
+    getRegex() {
+        return this.regex;
     }
 
     getRoute() {
         return this.route;
     }
 
-    getInstance() {
-        return this.instance;
+    matches(uri) {
+        var result = this.regex.exec(uri);
+        if (result) {
+            this.parameters = result.slice(1);
+            return true;
+        }
+
+        return false;
     }
 
-    matches(uri) {
-        return new Matcher('^' + this.route + '$', 'i').match(uri);
+    getParameters() {
+        return this.parameters.map((parameter, i) => {
+            if (i === this.parameters.length - 1) {
+                return parameter || null;
+            }
+
+            return parameter ? decodeURIComponent(parameter) : null;
+        });
+    }
+
+    launch() {
+        this.route.launch(this.getParameters());
     }
 }
