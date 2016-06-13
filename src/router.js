@@ -16,7 +16,7 @@ export default class Router {
         this.config = extend(defaultConfig, config);
         this.wheres = {
             'id': '[0-9]+',
-            '*': '[\w\-]+'
+            '\*': '[.*]'
         };
         this.compiled = {};
         this.previousUri;
@@ -80,8 +80,10 @@ export default class Router {
                 if (parameter.endsWith('?')) {
                     lookFor = '/' + lookFor;
                 }
+
                 regexRoute = regexRoute.replace(lookFor, this.with(parameter));
             }
+
 
             this.compiled[route] = new CompiledRoute(regexRoute, wheres, currentRoute);
         }
@@ -111,17 +113,15 @@ export default class Router {
     find (uri) {
         this.routesToRegex();
 
-        let route = null;
-
         if (this.emptyUriString(uri)) {
             uri = this.getDefaultRouteKey();
         }
 
-        for (let currentCompiled in this.compiled) {
-            let compiledRoute = this.compiled[currentCompiled];
+        for (let compiledKey in this.compiled) {
+            let compiledRoute = this.compiled[compiledKey];
             var results = null;
 
-            if (results = this.routeMatchesUri(compiledRoute.getRoute(), uri)) {
+            if (results = compiledRoute.matches(uri)) {
                 return {
                     parameters: array_combine(compiledRoute.getKeys(), results.slice(1)),
                     route: compiledRoute.getRoute(),
@@ -130,10 +130,6 @@ export default class Router {
                 };
             }
         }
-    }
-
-    routeMatchesUri(route, uri) {
-        return new Matcher('^' + route + '$', 'i').match(uri);
     }
 
     /**
@@ -233,7 +229,7 @@ export default class Router {
         let route = this.find(uri);
 
         if (! route) {
-            return new Error(`[Router] No route was found while creating url [${uri}]`);
+            throw new Error(`[Router] No route was found while creating url [${uri}]`);
         }
 
         if (this.getDefaultRouteKey() == route.route) {
@@ -261,7 +257,7 @@ export default class Router {
             let fallout = this.getFalloutHandler();
 
             if (! is_type(fallout, 'function')) {
-                return new Error('[Router] No route was found, nor any fallout function.');
+                throw new Error('[Router] No route was found, nor any fallout function.');
             }
 
             return fallout.apply(this, [404, this]);

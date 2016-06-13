@@ -6,11 +6,16 @@
 </head>
 <body>
     <script src="router.js"></script>
+    <a href="#" onclick="router.route();">Home</a>
+    <a href="#" onclick="router.route('user/1/edit');">Edit Profile</a>
+    <a href="#" onclick="router.route('user/1/delete');">Delete Profile</a>
+    <div id="output"></div>
+
     <script>
         var router = new Router({
             'home': () => {
                 var uri = router.url('user/:user_id/:some/edit', {user_id: 1, some: 'todo'});
-                console.log(uri);
+                addBody(uri);
                 router.route(uri);
 
                 return true;
@@ -19,22 +24,34 @@
             // /user
             'user/:user_id/:some?': {
                 edit: [
-                    (user_id, some) => {console.log(`editing user ${user_id} - ${some}`); return true;},
-                    (user_id, some) => {console.log(user_id); return true;},
+                    (user_id, some) => {
+                        addBody(`editing user ${user_id} - ${some}`);
+                        return true;
+                    },
+                    (user_id, some) => {
+                        addBody(user_id);
+                        return true;
+                    },
                 ],
 
-                delete: (user_id) => {
-                    var some = some || 'ooops'; 
-                    console.log(`deleting user ${user_id} ---- ${some}`)
+                delete: (user_id, some) => {
+                    // var some = some || 'ooops'; 
+                    addBody(`deleting user ${user_id} ---- ${some}`)
                 }
             },
 
-            about: () => console.log('about')
+            about: () => addBody('about'),
+
+            'smoosh/*': i => addBody(i)
         });
 
         router.where('user_id', '[0-9]+');
 
-        // console.log(router.route('user/1/edit/edit'));
+        const el = document.getElementById('output');
+
+        function addBody(output) {
+            el.innerText = `${el.innerText}\n${output}`;
+        } 
     </script>
 </body>
 </html>
