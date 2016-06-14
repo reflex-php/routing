@@ -178,7 +178,7 @@ export default class Router {
         for (let route in routes) {
             let thisUri = this.previousUri;
 
-            this.previousUri = `${this.previousUri}${route == '/' ? '' : '/'}${route}`;
+            this.previousUri = `${this.previousUri}${route == '/' || this.emptyUriString(route) ? '' : '/'}${route}`;
 
             if (is_type(routes[route], 'object')) {
                 // Further down the rabbit hole...

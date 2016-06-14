@@ -11,6 +11,7 @@ export default class Route {
     constructor (uri, router) {
         this.uri = uri;
         this.router = router;
+        this.callbacks = new Array;
     }
 
     /**
