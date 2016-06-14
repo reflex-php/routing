@@ -59,5 +59,5 @@ router.route('file/in/some/dir/hello.txt');
 // file => console.log(file) gets fired, where file is in/some/dir/hello.txt
 
 // Supports optional parameters
-router.add('user(/:action')/:id', (action, id) => console.log(action || 'view', id));
+router.add('user(/:action)/:id', (action, id) => console.log(action || 'view', id));
 ```
