@@ -1,25 +1,23 @@
 import { is_type, exists, array_combine } from './util.js';
 import Queue from './queue.js';
 
-/**
- * Route
- *
- * @param {string} uri Uri to route
- * @param {object} callbacks Callbacks to call when requested
- * @param {object} router Router instance
- */
 export default class Route {
-    constructor (uri, callbacks, router) {
+    /**
+     * Route
+     *
+     * @param {string} uri    Uri to route
+     * @param {object} router Router instance
+     */
+    constructor (uri, router) {
         this.uri = uri;
         this.router = router;
-
-        if (is_type(callbacks, 'function')) {
-            callbacks = [callbacks];
-        }
-
-        this.callbacks = callbacks;
     }
 
+    /**
+     * Launch this route
+     * @param  {parameters} parameters Parameters to pass to the callable
+     * @return {null}            
+     */
     launch (parameters) {
         let callableArguments = new Array();
 
@@ -36,7 +34,30 @@ export default class Route {
         queue.next(callableArguments);
     }
 
+    /**
+     * Add a callback to this route
+     * @param {callable} callback Callback being added
+     * @return {Route}
+     */
     add (callback) {
+        if (Array.isArray(callback)) {
+            callback.forEach(callable => this.add(callable));
+
+            return;
+        }
+
         this.callbacks.push(callback);
+
+        return this;
+    }
+
+    /**
+     * Flush all callbacks
+     * @return {Route} 
+     */
+    flush () {
+        this.callbacks = new Array;
+
+        return this;
     }
 }

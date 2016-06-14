@@ -48,7 +48,7 @@
     <script src="router.js"></script>
     <script>
         var router = new Router({
-            'home': () => addBody('Hello, World'),
+            home: () => addBody('Hello, World'),
 
             // /user
             'user(/:some)/:user_id': {
@@ -63,7 +63,20 @@
                 ]
             },
 
-            about: () => addBody('about'),
+            about: {
+                profile: {
+                    'hero-one': () => console.log('hero one'),
+
+                    'hero-two': () => console.log('hero two'),
+
+                    'super-heroes': {
+                        'super-one': () => console.log('super hero one'),
+
+                        'super-two': () => console.log('super hero two')
+                    }
+                },
+                '/': () => console.log('no heros here, nope.')
+            },
 
             'file/*file': file => addBody(file)
         });

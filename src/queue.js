@@ -1,11 +1,22 @@
-export default class Queue {  
+export default class Queue {
+    /**
+     * Construct a Queue instance
+     * @param  {Boolean} autorun Autorun
+     * @param  {Array}   queue   Queue
+     * @return {Queue}          
+     */
     constructor(autorun = true, queue) {
         this.running = false;
         this.autorun = autorun;
         this.queue = queue || new Array;
         this.previousValue = undefined;
     }
-  
+    
+    /**
+     * Add callback 
+     * @param {callable} callable Callable
+     * @return {Queue} 
+     */
     add(callable) {
         this.queue.push((value) => {
             const finished = new Promise((resolve, reject) => {
@@ -33,7 +44,12 @@ export default class Queue {
         
         return this;
     }
-  
+    
+    /**
+     * Dequeue the next callable
+     * @param  {mixed} value Value to passin
+     * @return {callable}       
+     */
     dequeue(value) {
         this.running = this.queue.shift();
 
@@ -43,7 +59,11 @@ export default class Queue {
 
         return this.running;
     }
-  
+    
+    /**
+     * Getter for 'next'
+     * @return {Function} 
+     */
     get next() {
         return this.dequeue;
     }
