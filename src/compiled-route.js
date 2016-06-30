@@ -34,6 +34,7 @@ export default class CompiledRoute {
      */
     matches(uri) {
         var result = this.regex.exec(uri);
+
         if (result) {
             this.parameters = result.slice(1);
             return true;
@@ -47,7 +48,7 @@ export default class CompiledRoute {
      * @return {array} 
      */
     getParameters() {
-        return this.parameters.map((parameter, i) => {
+        return this.parameters.reverse().map((parameter, i) => {
             if (i === this.parameters.length - 1) {
                 return parameter || null;
             }

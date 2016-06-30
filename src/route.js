@@ -20,19 +20,7 @@ export default class Route {
      * @return {null}            
      */
     launch (parameters) {
-        let callableArguments = new Array();
-
-        for (let parameter in parameters) {
-            callableArguments.push(parameters[parameter]);
-        }
-
-        const queue = new Queue(false);
-
-        for (let callback of this.callbacks) {
-            queue.add(callback);
-        }
-
-        queue.next(callableArguments);
+        this.callbacks.forEach(callback => callback.apply({}, parameters));
     }
 
     /**

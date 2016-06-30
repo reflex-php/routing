@@ -59,7 +59,8 @@
             'user(/:some)/:user_id': {
                 edit: [
                     (some, user_id) => addBody(`editing user ${user_id}`),
-                    (some, user_id) => addBody(some || 'todo')
+                    (some, user_id) => addBody(some || 'todo'),
+                    (some, user_id) => addBody(user_id)
                 ],
 
                 delete: [
