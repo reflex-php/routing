@@ -1,5 +1,4 @@
 import { is_type, exists, array_combine } from './util.js';
-import Queue from './queue.js';
 
 export default class Route {
     /**
