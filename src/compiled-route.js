@@ -48,7 +48,7 @@ export default class CompiledRoute {
      * @return {array} 
      */
     getParameters() {
-        return this.parameters.reverse().map((parameter, i) => {
+        return this.parameters.map((parameter, i) => {
             if (i === this.parameters.length - 1) {
                 return parameter || null;
             }
