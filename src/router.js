@@ -96,7 +96,7 @@ export default class Router {
 
         response = this.afterQueue.map(callable => callable(this, route, uri, response));
 
-        return fire ? route : response;
+        return fire ? response : route;
     }
 
     /**
