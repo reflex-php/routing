@@ -1,18 +1,9 @@
 export const defaultConfig = {
     /**
-     * 'Fallout' function, handles not finding route
-     * @param  {integer} code Error code
-     * @return {null}      
-     */
-    fallout: code => {
-        throw new Error(`[Router] Fallout code: ${code}`)
-    },
-
-    /**
-     * Default route key
+     * Default route URI
      * @type {String}
      */
-    defaultRouteKey: 'home',
+    defaultURI: 'home',
 
     /**
      * Patterns to loop through for URI matching

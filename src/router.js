@@ -1,7 +1,6 @@
-import { extend, exists, is_type, array_combine, ltrim, rtrim, trimmer } from './util.js';
+import { extend, exists, is_type, ltrim } from './util.js';
 import { defaultConfig } from './config.js';
 import Route from './route.js';
-import CompiledRoute from './compiled-route.js';
 
 export default class Router {
     /**
@@ -14,10 +13,10 @@ export default class Router {
         this.routes = {};
         this.config = extend(defaultConfig, config);
         this.patterns = this.config.patterns;
-        this.compiled = {};
         this.previousUri = '';
-        this.beforeQueue = new Array();
-        this.afterQueue = new Array();
+        this.beforeQueue = new Array;
+        this.afterQueue = new Array;
+        this.current = null;
 
         if (is_type(mappables, 'object')) {
             this.map(mappables);
@@ -40,14 +39,6 @@ export default class Router {
     }
 
     /**
-     * Instantiates a compiled route
-     * @return {null} 
-     */
-    compileRoute (route) {
-        this.compiled[route.uri] = new CompiledRoute(this.routeToRegex(route.uri), route);
-    }
-
-    /**
      * Checkes to see if passed uri is an 'empty' value
      * @param  {mixed} uri URI to check
      * @return {boolean}
@@ -57,11 +48,11 @@ export default class Router {
     }
 
     /**
-     * Get the 'default' route key
+     * Get the 'default' route uri
      * @return {string} 
      */
-    getDefaultRouteKey() {
-        return this.config.defaultRouteKey;
+    get defaultURI() {
+        return this.config.defaultURI;
     }
 
     /**
@@ -89,60 +80,60 @@ export default class Router {
     /**
      * Launch a route
      * @param  {string} uri URI to search and route
-     * @return {null}
+     * @param {boolean} fire Automatically fire the route?
+     * @return {Route|Array|null}
      */
-    route (uri) {
+    route (uri, fire = true) {
         let route = this.find(this.normalize(uri));
-        
+        let response = null;
+
         this.beforeQueue.map(callable => callable(this, route, uri));
+        this.current = route;
 
-        if (! route) {
-            let fallout = this.getFalloutHandler();
-
-            if (! is_type(fallout, 'function')) {
-                throw new Error('[Router] No route was found, nor any fallout function.');
-            }
-
-            fallout.apply(this, [404, this]);
-
-            return null;
+        if (route && fire) {
+            response = route.launch();
         }
 
-        route.launch();
+        this.afterQueue.map(callable => callable(this, route, uri, response));
 
-        this.afterQueue.map(callable => callable(this, route, uri));
+        return fire ? route : response;
+    }
+
+    /**
+     * Redirects to another route without launching before/after callbacks
+     * @param  {string} uri URI to search and route
+     * @param {boolean} fire Automatically fire the route?
+     * @return {Route|Array|null}     
+     */
+    redirect(uri, fire = true) {
+        let route = this.find(this.normalize(uri));
+        this.current = route;
+
+        if (route && fire) {
+            return route.launch();
+        }
+
+        return route;
     }
 
     /**
      * Find a URI, compiled or otherwise
      * @param  {string} uri URI to hunt
-     * @return {CompiledRoute|null}     
+     * @return {Route|null}     
      */
     find (uri) {
         if (this.emptyUriString(uri)) {
-            uri = this.getDefaultRouteKey();
+            uri = this.defaultURI;
         }
 
         uri = '/' + ltrim(uri, '/');
 
-        for (let compiledKey in this.compiled) {
-            let compiledRoute = this.compiled[compiledKey];
+        for (let routeURI in this.routes) {
+            let route = this.routes[routeURI];
 
-            if (compiledRoute.matches(uri)) {
-                return compiledRoute;
+            if (route.matches(uri)) {
+                return route;
             }
-        }
-
-        return null;
-    }
-
-    /**
-     * Handle unresolved routes
-     * @return {callable|null} 
-     */
-    getFalloutHandler () {
-        if (is_type(this.config['fallout'], 'function')) {
-            return this.config['fallout'];
         }
 
         return null;
@@ -196,16 +187,22 @@ export default class Router {
     }
 
     /**
-     * Find and return an existing compiled route if foun
-     * @param  {string} uri URI to look up
-     * @return {CompiledRoute|null}     
+     * Create a new instance of Route or a previous one
+     * @param  {string} uri URI to generate route for
+     * @return {Route}           
      */
-    findExistingRouteFromCompiledRoute(uri) {
-        if (exists(uri, this.compiled)) {
-            return this.compiled[uri].getRoute();
+    routeFactory(uri) {
+        uri = '/' + ltrim(uri, '/');
+
+        if (exists(uri, this.routes)) {
+            return this.routes[uri];
         }
 
-        return null;
+        return this.routes[uri] = new Route(
+            uri,
+            this.routeToRegex(uri),
+            this
+        );
     }
 
     /**
@@ -215,16 +212,9 @@ export default class Router {
      * @return {Router}
      */
     add (uri, callable) {
-        let route = this.findExistingRouteFromCompiledRoute(uri);
-
-        if (! route) {
-            route = new Route(uri, this);
-        }
+        let route = this.routeFactory(uri);
 
         route.add(callable);
-        
-        this.compileRoute(route);
-        this.routes[uri] = route;
 
         return this;
     }

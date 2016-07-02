@@ -2,10 +2,11 @@
   "name": "reflex-routing",
   "version": "4.1.6",
   "description": "Routing library for JavaScript",
-  "main": "lib/main.module.js",
+  "main": "dist/main.module.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rollup -c; rollup -c -f cjs -o ./lib/main.module.js"
+    "compile": "rollup -c; rollup -c -f cjs -o ./dist/main.module.js",
+    "prepublish": "npm run compile"
   },
   "author": "Mike Shellard <contact@mikeshellard.me>",
   "license": "MIT",
