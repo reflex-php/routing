@@ -1,4 +1,4 @@
-import { extend, exists, is_type, ltrim } from './util.js';
+import { empty, extend, exists, is_type, ltrim } from './util.js';
 import { defaultConfig } from './config.js';
 import Route from './route.js';
 
@@ -12,7 +12,6 @@ export default class Router {
     constructor (mappables = {}, config = {}) {
         this.routes = {};
         this.config = extend(defaultConfig, config);
-        this.patterns = this.config.patterns;
         this.previousUri = '';
         this.beforeQueue = new Array;
         this.afterQueue = new Array;
@@ -39,12 +38,11 @@ export default class Router {
     }
 
     /**
-     * Checkes to see if passed uri is an 'empty' value
-     * @param  {mixed} uri URI to check
-     * @return {boolean}
+     * Get patterns
+     * @return {array}
      */
-    emptyUriString(uri) {
-        return '' == uri || null == uri || undefined == uri;
+    get patterns() {
+        return this.config.patterns;
     }
 
     /**
@@ -84,7 +82,7 @@ export default class Router {
      * @return {Route|Array|null}
      */
     route (uri, fire = true) {
-        let route = this.find(this.normalize(uri));
+        let route = this.find(uri);
         let response = null;
 
         this.beforeQueue.map(callable => callable(this, route, uri));
@@ -106,7 +104,7 @@ export default class Router {
      * @return {Route|Array|null}     
      */
     redirect(uri, fire = true) {
-        let route = this.find(this.normalize(uri));
+        let route = this.find(uri);
         this.current = route;
 
         if (route && fire) {
@@ -122,11 +120,11 @@ export default class Router {
      * @return {Route|null}     
      */
     find (uri) {
-        if (this.emptyUriString(uri)) {
+        if (empty(uri)) {
             uri = this.defaultURI;
         }
 
-        uri = '/' + ltrim(uri, '/');
+        uri = this.normalize(uri);
 
         for (let routeURI in this.routes) {
             let route = this.routes[routeURI];
@@ -145,19 +143,9 @@ export default class Router {
      * @return {string}       
      */
     normalize (value) {
-        value = (function (value) {
-            if (typeof value === 'string') {
-                return value;
-            }
-
-            if (typeof value === 'number') {
-                return '' + value;
-            }
-
-            return value;
-        })(value);
-
-        return value ? ltrim(value, '/') : '';
+        return empty(value) 
+            ? ''
+            : '/' + ltrim(new String(value), '/');
     }
 
     /**
@@ -169,7 +157,7 @@ export default class Router {
         for (let route in routes) {
             let thisUri = this.previousUri;
 
-            this.previousUri = `${this.previousUri}${route == '/' || this.emptyUriString(route) ? '' : '/'}${route}`;
+            this.previousUri += this.normalize(route);
 
             if (is_type(routes[route], 'object')) {
                 // Further down the rabbit hole...
@@ -192,7 +180,7 @@ export default class Router {
      * @return {Route}           
      */
     routeFactory(uri) {
-        uri = '/' + ltrim(uri, '/');
+        uri = this.normalize(uri);
 
         if (exists(uri, this.routes)) {
             return this.routes[uri];
