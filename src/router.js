@@ -16,8 +16,9 @@ export default class Router {
         this.beforeQueue = new Array;
         this.afterQueue = new Array;
         this.current = null;
+        this.routeCount = 0;
 
-        if (is_object(mappables, 'object')) {
+        if (is_object(mappables)) {
             this.map(mappables);
         }
     }
@@ -53,6 +54,10 @@ export default class Router {
         return this.config.defaultURI;
     }
 
+    get isInitial() {
+        return 1 === this.routeCount;
+    }
+
     /**
      * Add a before callback
      * @param  {callable} callable Callable
@@ -85,6 +90,7 @@ export default class Router {
         let route = this.find(uri);
         let response = null;
 
+        this.routeCount++;
         this.beforeQueue.map(callable => callable(this, route, uri));
         this.current = route;
 
