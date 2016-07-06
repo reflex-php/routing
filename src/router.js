@@ -1,4 +1,4 @@
-import { empty, extend, exists, is_type, ltrim } from './util.js';
+import { empty, extend, exists, is_object, ltrim } from './util.js';
 import { defaultConfig } from './config.js';
 import Route from './route.js';
 
@@ -17,7 +17,7 @@ export default class Router {
         this.afterQueue = new Array;
         this.current = null;
 
-        if (is_type(mappables, 'object')) {
+        if (is_object(mappables, 'object')) {
             this.map(mappables);
         }
     }
@@ -94,6 +94,10 @@ export default class Router {
 
         response = this.afterQueue.map(callable => callable(this, route, uri, response));
 
+        if (empty(response)) {
+            response = null;
+        }
+
         return fire ? response : route;
     }
 
@@ -159,7 +163,7 @@ export default class Router {
 
             this.previousUri += this.normalize(route);
 
-            if (is_type(routes[route], 'object')) {
+            if (is_object(routes[route])) {
                 // Further down the rabbit hole...
                 this.map(routes[route]);
             } else {

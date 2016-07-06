@@ -1,39 +1,19 @@
 /**
- * Combine keys and values to form one array
- * @param  {object} keys   Array of keys
- * @param  {object} values Array of values
- * @return {object}        
- */
-export function array_combine(keys, values) {
-    let new_array = {};
-    let keycount = keys && keys.length;
-    let i = 0;
-
-    // input sanitation
-    if (typeof keys !== 'object' || typeof values !== 'object' || // Only accept arrays or array-like objects
-    typeof keycount !== 'number' || typeof values.length !== 'number' || !keycount) {
-        // Require arrays to have a count
-        return false;
-    }
-
-    // number of elements does not match
-    if (keycount != values.length) {
-        return false;
-    }
-
-    for (i = 0; i < keycount; i++) {
-        new_array[keys[i]] = values[i];
-    }
-
-    return new_array;
-}
-
-/**
  * Checkes to see if value is empty
  * @param  {mixed} uri URI to check
  * @return {boolean}
  */
 export function empty(value) {
+    if (typeof value == 'object') {
+        for (let currentValue in value) {
+            if (!! value[currentValue]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     return ! value;
 }
 
@@ -44,7 +24,7 @@ export function empty(value) {
  * @return {boolean}       
  */
 export function exists(key, array) {
-    return is_type(array, 'object') && key in array;
+    return is_object(array) && key in array;
 }
 
 /**
@@ -58,6 +38,24 @@ export function extend(to, from) {
         to[key] = from[key];
     }
     return to;
+}
+
+/**
+ * Assert something is an array
+ * @param  {mixed}   thing      Thing to check
+ * @return {Boolean}            
+ */
+export function is_array(thing) {
+    return is_type(thing, 'array');
+}
+
+/**
+ * Assert something is an object
+ * @param  {mixed}   thing      Thing to check
+ * @return {Boolean}            
+ */
+export function is_object(thing) {
+    return is_type(thing, 'object');
 }
 
 /**

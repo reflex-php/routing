@@ -1,4 +1,4 @@
-import { is_type, exists, array_combine } from './util.js';
+import { is_array } from './util.js';
 
 export default class Route {
     /**
@@ -29,7 +29,7 @@ export default class Route {
      * @return {Route}
      */
     add (callback) {
-        if (Array.isArray(callback)) {
+        if (is_array(callback)) {
             callback.forEach(callable => this.add(callable));
 
             return;
